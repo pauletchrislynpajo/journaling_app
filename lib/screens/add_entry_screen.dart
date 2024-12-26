@@ -1,3 +1,5 @@
+
+
 // lib/screens/add_entry_screen.dart
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
@@ -5,11 +7,13 @@ import 'package:sqflite/sqflite.dart';
 class AddEntryScreen extends StatefulWidget {
   final Future<Database> database;
   final int userId;
+  final String type;
 
   const AddEntryScreen({
     Key? key,
     required this.database,
     required this.userId,
+    required this.type,
   }) : super(key: key);
 
   @override
@@ -20,16 +24,6 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  String _selectedCategory = 'Happy';
-
-  final List<String> _categories = [
-    'Happy',
-    'Sad',
-    'Excited',
-    'Anxious',
-    'Grateful',
-    'Angry',
-  ];
 
   Future<void> _saveEntry() async {
     if (_formKey.currentState!.validate()) {
@@ -38,21 +32,24 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
         'entries',
         {
           'userId': widget.userId,
+          'type': widget.type,
           'title': _titleController.text,
           'description': _descriptionController.text,
-          'category': _selectedCategory,
           'date': DateTime.now().toIso8601String(),
         },
       );
 
       Navigator.pop(context);
+      Navigator.pop(context);  // Pop twice to go back to main screen
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Journal Entry')),
+      appBar: AppBar(
+        title: Text('New ${widget.type.capitalize()} Entry'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -80,25 +77,6 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                     return 'Please enter a description';
                   }
                   return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                decoration:
-                    const InputDecoration(labelText: 'How are you feeling?'),
-                items: _categories.map((String category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    setState(() {
-                      _selectedCategory = newValue;
-                    });
-                  }
                 },
               ),
               const SizedBox(height: 24),

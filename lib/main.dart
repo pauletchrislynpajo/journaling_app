@@ -1,3 +1,5 @@
+// lib/main.dart
+// Main application file remains mostly the same, but we'll update the database schema
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -12,12 +14,12 @@ void main() async {
         'CREATE TABLE users(id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT)',
       );
       await db.execute(
-        'CREATE TABLE entries(id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, title TEXT, description TEXT, category TEXT, date TEXT)',
+        'CREATE TABLE entries(id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, type TEXT, title TEXT, description TEXT, date TEXT)',
       );
     },
     version: 1,
   );
-
+  
   runApp(JournalApp(database: database));
 }
 

@@ -1,9 +1,9 @@
 
-
 // lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
-import 'add_entry_screen.dart';
+import 'library_screen.dart';
+import 'entry_type_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Future<Database> database;
@@ -20,72 +20,94 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Future<List<Map<String, dynamic>>> _getEntries() async {
-    final db = await widget.database;
-    return db.query(
-      'entries',
-      where: 'userId = ?',
-      whereArgs: [widget.userId],
-      orderBy: 'date DESC',
-    );
+  int _selectedIndex = 0;
+  final List<String> _encouragingWords = [
+    "Every day is a new beginning.",
+    "You're doing great!",
+    "Your feelings matter.",
+    "Take it one day at a time.",
+    "Your journey is uniquely yours.",
+    "Trust the process.",
+    "You are stronger than you know.",
+  ];
+
+  String get _randomEncouragement {
+    return _encouragingWords[DateTime.now().millisecond % _encouragingWords.length];
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Journal'),
+        title: Text(_selectedIndex == 0 ? 'Home' : 'Library'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () async {
-              await Navigator.push(
+            onPressed: () {
+              Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AddEntryScreen(
+                  builder: (context) => EntryTypeSelectionScreen(
                     database: widget.database,
                     userId: widget.userId,
                   ),
                 ),
               );
-              setState(() {});
             },
           ),
         ],
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _getEntries(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                final entry = snapshot.data![index];
-                return Card(
-                  margin: const EdgeInsets.all(8.0),
-                  child: ListTile(
-                    title: Text(entry['title']),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(entry['description']),
-                        Text(
-                          'Feeling: ${entry['category']}',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ],
-                    ),
-                    trailing: Text(entry['date']),
-                  ),
-                );
-              },
-            );
-          }
-          return const Center(child: CircularProgressIndicator());
+      body: _selectedIndex == 0
+          ? HomeBody(encouragement: _randomEncouragement)
+          : LibraryScreen(database: widget.database, userId: widget.userId),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
         },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.library_books),
+            label: 'Library',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HomeBody extends StatelessWidget {
+  final String encouragement;
+
+  const HomeBody({Key? key, required this.encouragement}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.favorite,
+              size: 80,
+              color: Colors.pink,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              encouragement,
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
