@@ -1,46 +1,43 @@
 
 
-// lib/screens/add_entry_screen.dart
+// Add entry screen (lib/screens/add_entry_screen.dart)
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
+import '../database/database_helper.dart';
 
 class AddEntryScreen extends StatefulWidget {
-  final Future<Database> database;
   final int userId;
   final String type;
 
   const AddEntryScreen({
-    Key? key,
-    required this.database,
+    super.key,
     required this.userId,
     required this.type,
-  }) : super(key: key);
+  });
 
   @override
-  _AddEntryScreenState createState() => _AddEntryScreenState();
+  State<AddEntryScreen> createState() => _AddEntryScreenState();
 }
 
 class _AddEntryScreenState extends State<AddEntryScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  final _contentController = TextEditingController();
+  final _dbHelper = DatabaseHelper();
 
   Future<void> _saveEntry() async {
     if (_formKey.currentState!.validate()) {
-      final db = await widget.database;
-      await db.insert(
-        'entries',
-        {
-          'userId': widget.userId,
-          'type': widget.type,
-          'title': _titleController.text,
-          'description': _descriptionController.text,
-          'date': DateTime.now().toIso8601String(),
-        },
-      );
+      final entry = {
+        'userId': widget.userId,
+        'type': widget.type,
+        'title': _titleController.text,
+        'content': _contentController.text,
+        'dateCreated': DateTime.now().toIso8601String(),
+      };
 
+      await _dbHelper.insertEntry(entry);
+      
+      if (!mounted) return;
       Navigator.pop(context);
-      Navigator.pop(context);  // Pop twice to go back to main screen
     }
   }
 
@@ -55,7 +52,6 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextFormField(
                 controller: _titleController,
@@ -68,18 +64,24 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Description'),
-                maxLines: 5,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a description';
-                  }
-                  return null;
-                },
+              Expanded(
+                child: TextFormField(
+                  controller: _contentController,
+                  decoration: const InputDecoration(
+                    labelText: 'Content',
+                    alignLabelWithHint: true,
+                  ),
+                  maxLines: null,
+                  expands: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter some content';
+                    }
+                    return null;
+                  },
+                ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _saveEntry,
                 child: const Text('Save Entry'),

@@ -1,34 +1,43 @@
-// lib/screens/register_screen.dart
+
+
+// Register screen (lib/screens/register_screen.dart)
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'login_screen.dart';
+import '../database/database_helper.dart';
 
 class RegisterScreen extends StatefulWidget {
-  final Future<Database> database;
-
-  const RegisterScreen({Key? key, required this.database}) : super(key: key);
+  const RegisterScreen({super.key});
 
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _dbHelper = DatabaseHelper();
 
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
-      final db = await widget.database;
-      await db.insert(
-        'users',
-        {
+      try {
+        final user = {
           'username': _usernameController.text,
           'password': _passwordController.text,
-        },
-      );
+        };
 
-      Navigator.pop(context);
+        await _dbHelper.insertUser(user);
+        
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registration successful!')),
+        );
+        Navigator.pop(context);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Username already exists')),
+        );
+      }
     }
   }
 
@@ -48,23 +57,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 decoration: const InputDecoration(labelText: 'Username'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter username';
+                    return 'Please enter a username';
                   }
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
                 decoration: const InputDecoration(labelText: 'Password'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter password';
+                    return 'Please enter a password';
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _confirmPasswordController,
+                decoration: const InputDecoration(labelText: 'Confirm Password'),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please confirm your password';
+                  }
+                  if (value != _passwordController.text) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _register,
                 child: const Text('Register'),

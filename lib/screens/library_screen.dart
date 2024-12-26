@@ -1,128 +1,128 @@
 
 
-// lib/screens/library_screen.dart
+// Library screen (lib/screens/library_screen.dart)
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
+import '../database/database_helper.dart';
 import 'entry_detail_screen.dart';
 
 class LibraryScreen extends StatefulWidget {
-  final Future<Database> database;
   final int userId;
 
-  const LibraryScreen({
-    Key? key,
-    required this.database,
-    required this.userId,
-  }) : super(key: key);
+  const LibraryScreen({super.key, required this.userId});
 
   @override
-  _LibraryScreenState createState() => _LibraryScreenState();
+  State<LibraryScreen> createState() => _LibraryScreenState();
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
-  String _selectedType = 'mood';
-
-  Future<List<Map<String, dynamic>>> _getEntries() async {
-    final db = await widget.database;
-    return db.query(
-      'entries',
-      where: 'userId = ? AND type = ?',
-      whereArgs: [widget.userId, _selectedType],
-      orderBy: 'date DESC',
-    );
-  }
+  String _currentType = 'all';
+  final _dbHelper = DatabaseHelper();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildTypeFilter('Mood', Icons.mood),
-              _buildTypeFilter('Reflective', Icons.psychology),
-              _buildTypeFilter('Memory', Icons.photo_album),
-            ],
+    return Scaffold(
+      appBar: AppBar(title: const Text('Library')),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _getNavIndex(_currentType),
+        onTap: (index) {
+          setState(() {
+            _currentType = _getTypeFromIndex(index);
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.all_inclusive),
+            label: 'All',
           ),
-        ),
-        Expanded(
-          child: FutureBuilder<List<Map<String, dynamic>>>(
-            future: _getEntries(),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                if (snapshot.data!.isEmpty) {
-                  return Center(
-                    child: Text('No ${_selectedType} entries yet'),
-                  );
-                }
-                return ListView.builder(
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, index) {
-                    final entry = snapshot.data![index];
-                    return Card(
-                      margin: const EdgeInsets.all(8.0),
-                      child: ListTile(
-                        title: Text(entry['title']),
-                        subtitle: Text(
-                          entry['description'],
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: Text(
-                          DateTime.parse(entry['date'])
-                              .toLocal()
-                              .toString()
-                              .split(' ')[0],
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => EntryDetailScreen(entry: entry),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                );
-              }
-              return const Center(child: CircularProgressIndicator());
-            },
+          BottomNavigationBarItem(
+            icon: Icon(Icons.mood),
+            label: 'Mood',
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTypeFilter(String type, IconData icon) {
-    final isSelected = _selectedType == type.toLowerCase();
-    return FilterChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: isSelected ? Colors.white : Colors.grey,
+          BottomNavigationBarItem(
+            icon: Icon(Icons.psychology),
+            label: 'Reflective',
           ),
-          const SizedBox(width: 4),
-          Text(
-            type,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.black,
-            ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.photo_album),
+            label: 'Memory',
           ),
         ],
       ),
-      selected: isSelected,
-      onSelected: (bool selected) {
-        setState(() {
-          _selectedType = type.toLowerCase();
-        });
-      },
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _currentType == 'all'
+            ? _dbHelper.getAllEntries(widget.userId)
+            : _dbHelper.getEntriesByType(widget.userId, _currentType),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final entries = snapshot.data!;
+          
+          return ListView.builder(
+            itemCount: entries.length,
+            itemBuilder: (context, index) {
+              final entry = entries[index];
+              return ListTile(
+                title: Text(entry['title']),
+                subtitle: Text(entry['dateCreated']),
+                leading: Icon(_getIconForType(entry['type'])),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EntryDetailScreen(entryId: entry['id']),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
     );
+  }
+
+  int _getNavIndex(String type) {
+    switch (type) {
+      case 'all':
+        return 0;
+      case 'mood':
+        return 1;
+      case 'reflective':
+        return 2;
+      case 'memory':
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
+  String _getTypeFromIndex(int index) {
+    switch (index) {
+      case 0:
+        return 'all';
+      case 1:
+        return 'mood';
+      case 2:
+        return 'reflective';
+      case 3:
+        return 'memory';
+      default:
+        return 'all';
+    }
+  }
+
+  IconData _getIconForType(String type) {
+    switch (type) {
+      case 'mood':
+        return Icons.mood;
+      case 'reflective':
+        return Icons.psychology;
+      case 'memory':
+        return Icons.photo_album;
+      default:
+        return Icons.note;
+    }
   }
 }

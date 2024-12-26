@@ -1,110 +1,103 @@
 
-// lib/screens/home_screen.dart
-import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'library_screen.dart';
-import 'entry_type_selection_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  final Future<Database> database;
+// Home screen (lib/screens/home_screen.dart)
+import 'package:flutter/material.dart';
+import '../widgets/encouragement_card.dart';
+import 'library_screen.dart';
+import 'add_entry_screen.dart';
+
+class HomeScreen extends StatelessWidget {
   final int userId;
 
-  const HomeScreen({
-    Key? key,
-    required this.database,
-    required this.userId,
-  }) : super(key: key);
-
-  @override
-  _HomeScreenState createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
-  final List<String> _encouragingWords = [
-    "Every day is a new beginning.",
-    "You're doing great!",
-    "Your feelings matter.",
-    "Take it one day at a time.",
-    "Your journey is uniquely yours.",
-    "Trust the process.",
-    "You are stronger than you know.",
-  ];
-
-  String get _randomEncouragement {
-    return _encouragingWords[DateTime.now().millisecond % _encouragingWords.length];
-  }
+  const HomeScreen({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selectedIndex == 0 ? 'Home' : 'Library'),
+        title: const Text('Journal'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EntryTypeSelectionScreen(
-                    database: widget.database,
-                    userId: widget.userId,
-                  ),
-                ),
-              );
-            },
+            onPressed: () => _showEntryTypeDialog(context),
           ),
         ],
       ),
-      body: _selectedIndex == 0
-          ? HomeBody(encouragement: _randomEncouragement)
-          : LibraryScreen(database: widget.database, userId: widget.userId),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.library_books),
-            label: 'Library',
+      body: Column(
+        children: [
+          const EncouragementCard(),
+          Expanded(
+            child: Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LibraryScreen(userId: userId),
+                    ),
+                  );
+                },
+                child: const Text('View Library'),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
-}
 
-class HomeBody extends StatelessWidget {
-  final String encouragement;
-
-  const HomeBody({Key? key, required this.encouragement}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+  void _showEntryTypeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Choose Entry Type'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.favorite,
-              size: 80,
-              color: Colors.pink,
+            ListTile(
+              title: const Text('Mood'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddEntryScreen(
+                      userId: userId,
+                      type: 'mood',
+                    ),
+                  ),
+                );
+              },
             ),
-            const SizedBox(height: 24),
-            Text(
-              encouragement,
-              style: Theme.of(context).textTheme.headlineSmall,
-              textAlign: TextAlign.center,
+            ListTile(
+              title: const Text('Reflective'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddEntryScreen(
+                      userId: userId,
+                      type: 'reflective',
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              title: const Text('Memory'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddEntryScreen(
+                      userId: userId,
+                      type: 'memory',
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),

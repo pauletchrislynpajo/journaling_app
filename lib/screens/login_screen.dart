@@ -1,44 +1,39 @@
 
-// lib/screens/login_screen.dart
+// Login screen (lib/screens/login_screen.dart)
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'register_screen.dart';
+import '../database/database_helper.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  final Future<Database> database;
-
-  const LoginScreen({Key? key, required this.database}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _dbHelper = DatabaseHelper();
 
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      final db = await widget.database;
-      final List<Map<String, dynamic>> users = await db.query(
-        'users',
-        where: 'username = ? AND password = ?',
-        whereArgs: [_usernameController.text, _passwordController.text],
+      final user = await _dbHelper.getUser(
+        _usernameController.text,
+        _passwordController.text,
       );
 
-      if (users.isNotEmpty) {
+      if (user != null) {
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => HomeScreen(
-              database: widget.database,
-              userId: users.first['id'] as int,
-            ),
+            builder: (context) => HomeScreen(userId: user['id']),
           ),
         );
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid credentials')),
         );
@@ -67,6 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
                 decoration: const InputDecoration(labelText: 'Password'),
@@ -78,19 +74,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _login,
                 child: const Text('Login'),
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => RegisterScreen(database: widget.database),
-                    ),
-                  );
+                  // Navigate to register screen
                 },
                 child: const Text('Create Account'),
               ),
