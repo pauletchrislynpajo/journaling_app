@@ -1,7 +1,7 @@
-
-
 // Entry detail screen (lib/screens/entry_detail_screen.dart)
 import 'package:flutter/material.dart';
+import 'package:journaling_app/extensions/string_extension.dart';
+
 import '../database/database_helper.dart';
 
 class EntryDetailScreen extends StatelessWidget {

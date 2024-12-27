@@ -1,7 +1,7 @@
-
-
 // Add entry screen (lib/screens/add_entry_screen.dart)
 import 'package:flutter/material.dart';
+import 'package:journaling_app/extensions/string_extension.dart';
+
 import '../database/database_helper.dart';
 
 class AddEntryScreen extends StatefulWidget {
@@ -35,7 +35,7 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
       };
 
       await _dbHelper.insertEntry(entry);
-      
+
       if (!mounted) return;
       Navigator.pop(context);
     }

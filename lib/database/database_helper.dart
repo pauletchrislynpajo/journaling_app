@@ -1,6 +1,6 @@
 // First, let's set up our database helper (lib/database/database_helper.dart)
-import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -17,7 +17,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'journal_database.db');
+    String path = join(await getDatabasesPath(), 'journal_database_new.db');
     return await openDatabase(
       path,
       version: 1,
@@ -55,7 +55,8 @@ class DatabaseHelper {
     return await db.insert('users', user);
   }
 
-  Future<Map<String, dynamic>?> getUser(String username, String password) async {
+  Future<Map<String, dynamic>?> getUser(
+      String username, String password) async {
     Database db = await database;
     List<Map<String, dynamic>> results = await db.query(
       'users',
@@ -71,7 +72,8 @@ class DatabaseHelper {
     return await db.insert('entries', entry);
   }
 
-  Future<List<Map<String, dynamic>>> getEntriesByType(int userId, String type) async {
+  Future<List<Map<String, dynamic>>> getEntriesByType(
+      int userId, String type) async {
     Database db = await database;
     return await db.query(
       'entries',
