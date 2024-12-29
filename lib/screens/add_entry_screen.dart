@@ -1,4 +1,3 @@
-// Add entry screen (lib/screens/add_entry_screen.dart)
 import 'package:flutter/material.dart';
 import 'package:journaling_app/extensions/string_extension.dart';
 
@@ -45,9 +44,15 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('New ${widget.type.capitalize()} Entry'),
+        backgroundColor: Colors.brown.shade700,
+        title: Text(
+          'New ${widget.type.capitalize()} Entry',
+          style: TextStyle(color: Colors.brown.shade50),
+        ),
+        iconTheme: IconThemeData(color: Colors.brown.shade50),
       ),
-      body: Padding(
+      body: Container(
+        color: Colors.brown.shade100,
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -55,7 +60,16 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
             children: [
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Title'),
+                decoration: InputDecoration(
+                  labelText: 'Title',
+                  labelStyle: TextStyle(color: Colors.brown.shade700),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.brown.shade700),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.brown.shade900),
+                  ),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a title';
@@ -67,9 +81,16 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               Expanded(
                 child: TextFormField(
                   controller: _contentController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Content',
+                    labelStyle: TextStyle(color: Colors.brown.shade700),
                     alignLabelWithHint: true,
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.brown.shade700),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.brown.shade900),
+                    ),
                   ),
                   maxLines: null,
                   expands: true,
@@ -83,6 +104,10 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.brown.shade700,
+                  foregroundColor: Colors.brown.shade50,
+                ),
                 onPressed: _saveEntry,
                 child: const Text('Save Entry'),
               ),
